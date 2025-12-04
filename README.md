@@ -29,3 +29,59 @@
   - `bookings.py`: API `/booking` (POST) lưu thông tin đặt phòng vào MongoDB.
 
 - `app/main.py`: Entry point FastAPI; khởi tạo app, gắn router (auth, booking...), cấu hình CORS cho frontend, và khởi động các hook kết nối DB.
+
+## Setup and Running the Backend
+
+### Prerequisites
+- Python 3.8 or higher
+- MongoDB (via Docker or local installation)
+
+### Installation
+
+1. Navigate to the backend directory:
+```bash
+cd BE
+```
+
+2. Create a virtual environment (recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Set up environment variables:
+Create a `.env` file in the `BE` directory with the following:
+```env
+MONGODB_URL=mongodb://localhost:27017
+DATABASE_NAME=your_database_name
+```
+
+### Running MongoDB with Docker
+
+Start MongoDB using docker-compose:
+```bash
+docker-compose up -d
+```
+
+### Running the Backend Server
+
+From the `BE` directory, run:
+```bash
+python -m app.main
+```
+
+Or alternatively using uvicorn directly:
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at:
+- API: http://localhost:8000
+- Health Check: http://localhost:8000/health_check
+- API Documentation: http://localhost:8000/docs
+- Alternative API Documentation: http://localhost:8000/redoc
