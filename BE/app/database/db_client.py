@@ -1,15 +1,50 @@
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import Optional
+import os
+from dotenv import load_dotenv
 
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+load_dotenv()
 
-uri = "mongodb+srv://hungnguyen2205_db_user:ASE-251-2025@ase-251.gbnjmee.mongodb.net/?appName=ASE-251"
+# MongoDB connection settings
+MONGODB_URL = os.getenv(
+    "MONGODB_URL", "mongodb+srv://hungnguyen2205_db_user:ASE-251-2025@ase-251.gbnjmee.mongodb.net/?appName=ASE-251")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "ase")
 
-# Create a new client and connect to the server
-client = MongoClient(uri, server_api=ServerApi('1'))
+# Global client instance
+client: Optional[AsyncIOMotorClient] = None
 
-# Send a ping to confirm a successful connection
-try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
+
+async def connect_to_mongo():
+    """Connect to MongoDB."""
+    global client
+    try:
+        client = AsyncIOMotorClient(MONGODB_URL)
+        # Test the connection
+        await client.admin.command('ping')
+        print(
+            f"✅ Successfully connected to MongoDB! Database: {DATABASE_NAME}")
+    except Exception as e:
+        print(f"❌ Error connecting to MongoDB: {e}")
+        raise
+
+
+async def close_mongo_connection():
+    """Close MongoDB connection."""
+    global client
+    if client:
+        client.close()
+        print("🔌 MongoDB connection closed")
+
+
+def get_database():
+    """Get database instance."""
+    if client is None:
+        raise Exception(
+            "Database not connected. Call connect_to_mongo() first.")
+    return client[DATABASE_NAME]
+
+
+def get_users_collection():
+    """Get users collection."""
+    db = get_database()
+    return db["users"]
