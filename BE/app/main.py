@@ -1,47 +1,30 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.database.db_client import connect_to_mongo, close_mongo_connection
-from app.routers import auth, health_check, booking
 from app.routers import health_check, auth
 
 app = FastAPI()
 
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Connect to MongoDB when the app starts."""
-    await connect_to_mongo()
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Close MongoDB connection when the app stops."""
-    await close_mongo_connection()
-
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    # Replace '*' with the specific origin if needed
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(health_check.router)
-app.include_router(booking.router)
 app.include_router(auth.router)
 
 
 def main():
     """Run the FastAPI application."""
     import uvicorn
-
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=True
     )
 
 
