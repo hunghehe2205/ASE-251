@@ -5,3 +5,7 @@ pydantic
 pydantic-settings
 python-dotenv
 pymongo[srv]
+email-validator
+python-jose[cryptography]
+passlib[bcrypt]
+requests

@@ -48,3 +48,15 @@ def get_users_collection():
     """Get users collection."""
     db = get_database()
     return db["users"]
+
+
+def get_refresh_tokens_collection():
+    """Get refresh_tokens collection."""
+    db = get_database()
+    return db["refresh_tokens"]
+
+
+def get_bookings_collection():
+    """Get bookings collection."""
+    db = get_database()
+    return db["bookings"]
