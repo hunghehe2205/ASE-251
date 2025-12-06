@@ -1,23 +1,21 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
+from pymongo.server_api import ServerApi
 from typing import Optional
-from app.config.settings import MONGODB_URL, DATABASE_NAME
+from app.config.settings import MONGODB_URI, DATABASE_NAME
 
-# Global client instance
-client: Optional[AsyncIOMotorClient] = None
+# Global async client instance
+client: Optional[AsyncMongoClient] = None
 
 
 async def connect_to_mongo():
-    """Connect to MongoDB."""
+    """Connect to MongoDB using async client."""
     global client
     try:
-        # Add TLS/SSL configuration for MongoDB Atlas
-        client = AsyncIOMotorClient(
-            MONGODB_URL
-        )
+        # Create async MongoDB client
+        client = AsyncMongoClient(MONGODB_URI, server_api=ServerApi('1'))
         # Test the connection
         await client.admin.command('ping')
-        print(
-            f"Successfully connected to MongoDB! Database: {DATABASE_NAME}")
+        print(f"Successfully connected to MongoDB! Database: {DATABASE_NAME}")
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
         raise
@@ -28,7 +26,7 @@ async def close_mongo_connection():
     global client
     if client:
         client.close()
-        print(" MongoDB connection closed")
+        print("MongoDB connection closed")
 
 
 async def get_database():
@@ -39,12 +37,7 @@ async def get_database():
     return client[DATABASE_NAME]
 
 
-def get_users_collection():
-    """Get users collection."""
-    global client
-    if client is None:
-        # Return a lazy client that will connect on first use
-        client = AsyncIOMotorClient(
-            MONGODB_URL
-        )
-    return client[DATABASE_NAME]["users"]
+async def get_users_collection():
+    """Get users collection with async client."""
+    db = await get_database()
+    return db["users"]
