@@ -103,7 +103,6 @@ async def create_booking(
             start_time=booking_data.start_time,
             end_time=booking_data.end_time
         )
-
         if not is_available:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -114,7 +113,6 @@ async def create_booking(
                     }
                 }
             )
-
         # Create booking document
         collection = get_bookings_collection()
         booking_doc = {
