@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.db_client import connect_to_mongo, close_mongo_connection
 from app.routers import auth, health_check, booking
+from app.routers import health_check, auth
 
 app = FastAPI()
 
@@ -29,6 +30,7 @@ app.add_middleware(
 
 app.include_router(health_check.router)
 app.include_router(booking.router)
+app.include_router(auth.router)
 
 
 def main():

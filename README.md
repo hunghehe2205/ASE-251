@@ -66,13 +66,6 @@ DATABASE_NAME=ase
 MONGODB_URL=mongodb://localhost:27017
 ```
 
-### Running MongoDB with Docker
-
-Start MongoDB using docker-compose:
-```bash
-docker-compose up -d
-```
-
 ### Running the Backend Server
 
 From the `BE` directory, run:
