@@ -197,8 +197,15 @@ async def login(request: LoginRequest):
         )
 
     # Success: return only role
-    role = user.get("role", "")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"role": role})
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, 
+        content={
+            "role": user.get("role", ""),
+            "user_id" : user.get("user_id",""),
+            "fullname": user.get("fullname", ""),
+            "email": user.get("email", "")
+            }
+        )
 
 
 @router.post("/logout", response_model=AuthResponse)
