@@ -4,10 +4,17 @@ from app.routers import health_check, auth
 
 app = FastAPI()
 
+@app.get("/")
+def home():
+    return {
+        "status": "ok",
+        "message": "ASE-251 FastAPI Backend is running 🚀",
+        "docs": "/docs"
+    }
+
 app.add_middleware(
     CORSMiddleware,
-    # Replace '*' with the specific origin if needed
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173"],  # update later for FE deploy
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
