@@ -24,7 +24,7 @@ class BookingResponse(BaseModel):
     created_at: str = Field(..., description="ISO timestamp when booking was created")
 
 
-class ErrorDetail(BaseModel):
+class ResponseDetail(BaseModel):
     """Error detail structure."""
     code: str
     message: str
@@ -32,4 +32,9 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standard error response."""
-    error: ErrorDetail
+    error: ResponseDetail
+
+
+class SuccessResponse(BaseModel):
+    """Standard success response."""
+    message: str
