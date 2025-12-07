@@ -15,7 +15,7 @@ async def check_room_availability(
     end_time: str
 ) -> bool:
     """Check if room is available for the given time slot."""
-    collection = get_bookings_collection()
+    collection = await get_bookings_collection()
     
     # Find conflicting bookings for the same room and date
     conflicting_booking = await collection.find_one({
@@ -116,13 +116,14 @@ async def create_booking(
             )
 
         # Create booking document
-        collection = get_bookings_collection()
+        collection = await get_bookings_collection()
         booking_doc = {
             "room_id": room_id,
             "lecturer_id": "",  # No user tracking when using header-based auth
             "date": booking_data.date,
             "start_time": booking_data.start_time,
             "end_time": booking_data.end_time,
+            "course_id": booking_data.course_id,
             "course_name": booking_data.course_name,
             "notes": booking_data.notes,
             "created_at": datetime.utcnow().isoformat() + "Z"
