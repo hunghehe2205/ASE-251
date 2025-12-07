@@ -1,9 +1,8 @@
 """Room booking endpoints."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from datetime import datetime
 
-from app.schemas.booking import BookingRequest, BookingResponse, ErrorResponse
-from app.dependencies.auth import require_lecturer
+from app.schemas.booking import BookingRequest, SuccessResponse, ErrorResponse
 from app.database.db_client import get_bookings_collection
 
 router = APIRouter(prefix="/rooms", tags=["bookings"])
@@ -46,10 +45,13 @@ async def check_room_availability(
 
 @router.post(
     "/{room_id}/booking",
-    response_model=BookingResponse,
+    response_model=SuccessResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
-        201: {"description": "Booking created successfully"},
+        201: {
+            "model": SuccessResponse,
+            "description": "Booking created successfully"
+        },
         401: {
             "model": ErrorResponse,
             "description": "Unauthorized - Only lecturers can create bookings"
@@ -67,20 +69,32 @@ async def check_room_availability(
 async def create_booking(
     room_id: str,
     booking_data: BookingRequest,
-    current_user: dict = Depends(require_lecturer)
+    role: str = Header(default="")
 ):
     """
     Create a new room booking.
-    
+
     - **room_id**: Room identifier (e.g., "401")
     - **date**: Booking date in YYYY-MM-DD format
     - **start_time**: Start time in HH:MM format
     - **end_time**: End time in HH:MM format
     - **course_name**: Name of the course
     - **notes**: Optional notes about the booking
-    
-    Requires JWT authentication with lecturer role.
+
+    Requires role header with value "lecturer".
     """
+    # Check if role is lecturer
+    if role != "lecturer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Only lecturers can create room bookings"
+                }
+            }
+        )
+
     try:
         # Check room availability
         is_available = await check_room_availability(
@@ -89,7 +103,7 @@ async def create_booking(
             start_time=booking_data.start_time,
             end_time=booking_data.end_time
         )
-        
+
         if not is_available:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -100,12 +114,12 @@ async def create_booking(
                     }
                 }
             )
-        
+
         # Create booking document
         collection = get_bookings_collection()
         booking_doc = {
             "room_id": room_id,
-            "lecturer_id": current_user["user_id"],
+            "lecturer_id": "",  # No user tracking when using header-based auth
             "date": booking_data.date,
             "start_time": booking_data.start_time,
             "end_time": booking_data.end_time,
@@ -113,21 +127,11 @@ async def create_booking(
             "notes": booking_data.notes,
             "created_at": datetime.utcnow().isoformat() + "Z"
         }
-        
-        result = await collection.insert_one(booking_doc)
-        
-        # Return the created booking
-        return BookingResponse(
-            id=str(result.inserted_id),
-            room_id=room_id,
-            lecturer_id=current_user["user_id"],
-            date=booking_data.date,
-            start_time=booking_data.start_time,
-            end_time=booking_data.end_time,
-            course_name=booking_data.course_name,
-            notes=booking_data.notes,
-            created_at=booking_doc["created_at"]
-        )
+
+        await collection.insert_one(booking_doc)
+
+        # Return success message only
+        return SuccessResponse(message="Booking created successfully")
         
     except HTTPException:
         # Re-raise HTTP exceptions
