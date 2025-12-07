@@ -1,20 +1,20 @@
 from pymongo import AsyncMongoClient
 from pymongo.server_api import ServerApi
 from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorClient
 from app.config.settings import MONGODB_URI, DATABASE_NAME
 
 # Global async client instance
-client: Optional[AsyncMongoClient] = None
+client: Optional[AsyncIOMotorClient] = None
 
 
 async def connect_to_mongo():
     """Connect to MongoDB using async client."""
     global client
     try:
-        # Create async MongoDB client
-        client = AsyncMongoClient(MONGODB_URI, server_api=ServerApi('1'))
+        client = AsyncIOMotorClient(MONGODB_URI)
         # Test the connection
-        await client.admin.command('ping')
+        await client.admin.command("ping")
         print(f"Successfully connected to MongoDB! Database: {DATABASE_NAME}")
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
