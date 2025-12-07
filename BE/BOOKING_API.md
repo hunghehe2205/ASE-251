@@ -13,9 +13,9 @@ POST /rooms/{room_id}/booking
 Creates a new booking for a specific room.
 
 ## Authentication
-Requires JWT Bearer token in the Authorization header:
+Requires `role` header with value `lecturer`:
 ```
-Authorization: Bearer <jwt_token>
+role: lecturer
 ```
 
 **Role Required:** `lecturer` (only lecturers can create bookings)
@@ -31,6 +31,7 @@ Authorization: Bearer <jwt_token>
   "date": "2025-12-10",           // String, required (YYYY-MM-DD format)
   "start_time": "13:00",          // String, required (HH:MM format)
   "end_time": "15:00",            // String, required (HH:MM format)
+  "course_id": "CO-2017",         // String, required
   "course_name": "Data Structures", // String, required
   "notes": "Lab session, bilingual" // String, optional
 }
@@ -41,15 +42,7 @@ Authorization: Bearer <jwt_token>
 ### ✅ Success (201 Created)
 ```json
 {
-  "id": "674e3f12a5b8c9d8e7f6a1b2",
-  "room_id": "401",
-  "lecturer_id": "lecturer_001",
-  "date": "2025-12-10",
-  "start_time": "13:00",
-  "end_time": "15:00",
-  "course_name": "Data Structures",
-  "notes": "Lab session, bilingual",
-  "created_at": "2025-12-06T10:30:00Z"
+  "message": "Booking created successfully"
 }
 ```
 
@@ -90,9 +83,8 @@ When there's a problem checking room availability:
 
 ### Files Created
 1. **`app/schemas/booking.py`** - Pydantic models for request/response
-2. **`app/dependencies/auth.py`** - JWT authentication and authorization
-3. **`app/routers/booking.py`** - Booking endpoint implementation
-4. **`app/database/db_client.py`** - Added `get_bookings_collection()` function
+2. **`app/routers/booking.py`** - Booking endpoint implementation
+3. **`app/database/db_client.py`** - Added `get_bookings_collection()` function
 
 ### Time Conflict Detection
 The API checks for overlapping bookings using MongoDB queries:
@@ -106,10 +98,11 @@ Bookings are stored in the `bookings` collection:
 {
   "_id": ObjectId,
   "room_id": "401",
-  "lecturer_id": "lecturer_001",
+  "lecturer_id": "",
   "date": "2025-12-10",
   "start_time": "13:00",
   "end_time": "15:00",
+  "course_id": "CO-2017",
   "course_name": "Data Structures",
   "notes": "Lab session, bilingual",
   "created_at": "2025-12-06T10:30:00Z"
@@ -140,21 +133,16 @@ This will test:
 
 ### Manual Testing with curl
 
-#### 1. Create a test JWT token
-Use your existing JWT token or create one with:
-- `sub`: User ID
-- `role`: "lecturer"
-- `email`: User email
-
-#### 2. Create a booking
+#### Create a booking
 ```bash
 curl -X POST http://localhost:8000/rooms/401/booking \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "role: lecturer" \
   -H "Content-Type: application/json" \
   -d '{
     "date": "2025-12-10",
     "start_time": "13:00",
     "end_time": "15:00",
+    "course_id": "CO-2017",
     "course_name": "Data Structures",
     "notes": "Lab session"
   }'
@@ -165,14 +153,11 @@ Add to your `.env` file:
 ```env
 MONGODB_URL="your-mongodb-connection-string"
 DATABASE_NAME="ase"
-JWT_SECRET_KEY="your-super-secret-jwt-key-change-this-in-production"
 ```
 
 ## Security Notes
-1. Change `JWT_SECRET_KEY` in production to a strong, random key
-2. JWT tokens include role-based authorization
-3. Only users with `role: "lecturer"` can create bookings
-4. All MongoDB queries use parameterized inputs to prevent injection
+1. Only users with `role: "lecturer"` header can create bookings
+
 
 ## API Documentation
 Once the server is running, visit:
