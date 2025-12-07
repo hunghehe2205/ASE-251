@@ -7,17 +7,6 @@ from app.routers import auth, health_check, booking
 app = FastAPI()
 
 
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Connect to MongoDB when the app starts."""
-    await connect_to_mongo()
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Close MongoDB connection when the app stops."""
-    await close_mongo_connection()
-
 
 app.add_middleware(
     CORSMiddleware,
