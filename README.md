@@ -57,15 +57,13 @@ pip install -r requirements.txt
 4. Set up environment variables:
 Create a `.env` file in the `BE` directory with the following:
 ```env
-MONGODB_URL=mongodb://localhost:27017
-DATABASE_NAME=your_database_name
+MONGODB_URL=mongodb+srv://hungnguyen2205_db_user:ASE-251-2025@ase-251.gbnjmee.mongodb.net/?appName=ASE-251
+DATABASE_NAME=ase
 ```
 
-### Running MongoDB with Docker
-
-Start MongoDB using docker-compose:
-```bash
-docker-compose up -d
+**Note:** The default connection is already configured for MongoDB Atlas. If you want to use a local MongoDB instance, change the URL to:
+```env
+MONGODB_URL=mongodb://localhost:27017
 ```
 
 ### Running the Backend Server
