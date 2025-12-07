@@ -43,12 +43,6 @@ async def get_users_collection():
     return db["users"]
 
 
-async def get_refresh_tokens_collection():
-    """Get refresh_tokens collection."""
-    db = await get_database()
-    return db["refresh_tokens"]
-
-
 async def get_bookings_collection():
     """Get bookings collection."""
     db = await get_database()

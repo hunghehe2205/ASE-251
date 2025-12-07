@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from app.database.db_client import connect_to_mongo, close_mongo_connection
+from app.database.db_client import connect_to_mongo
 
 router = APIRouter()
 
