@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database.db_client import connect_to_mongo, close_mongo_connection
 from app.routers import auth, health_check, booking
 
 app = FastAPI()
