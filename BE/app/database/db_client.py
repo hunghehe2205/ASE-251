@@ -49,7 +49,7 @@ def get_refresh_tokens_collection():
     return db["refresh_tokens"]
 
 
-def get_bookings_collection():
+async def get_bookings_collection():
     """Get bookings collection."""
-    db = get_database()
+    db = await get_database()
     return db["bookings"]
