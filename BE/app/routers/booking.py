@@ -17,7 +17,6 @@ async def check_room_availability(
 ) -> bool:
     """Check if room is available for the given time slot."""
     collection = await get_bookings_collection()
-
     # Find conflicting bookings for the same room and date
     conflicting_booking = await collection.find_one({
         "room_id": room_id,
@@ -40,7 +39,6 @@ async def check_room_availability(
             }
         ]
     })
-
     return conflicting_booking is None
 
 
