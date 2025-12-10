@@ -146,6 +146,7 @@ async def create_booking(
         # Return full booking response
         return BookingResponse(
             booking_id=booking_id,
+            room_id=room_id,
             user_id=booking_data.user_id,
             date=booking_data.date,
             start_time=booking_data.start_time,
@@ -319,6 +320,7 @@ async def update_booking(
         # Return updated booking response
         return BookingResponse(
             booking_id=booking_id,
+            room_id=room_id,
             user_id=updated_data["user_id"],
             date=updated_data["date"],
             start_time=updated_data["start_time"],
@@ -339,6 +341,83 @@ async def update_booking(
                 "error": {
                     "code": "ROOM_SERVICE_TIMEOUT",
                     "message": "Room system did not respond"
+                }
+            }
+        )
+
+
+@router.get(
+    "/booking/{booking_id}",
+    response_model=BookingResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "model": BookingResponse,
+            "description": "Booking retrieved successfully"
+        },
+        404: {
+            "model": ErrorResponse,
+            "description": "Booking not found"
+        },
+        500: {
+            "model": ErrorResponse,
+            "description": "Internal server error"
+        }
+    }
+)
+async def get_booking(
+    booking_id: str
+):
+    """
+    Get booking information by booking ID.
+
+    - **booking_id**: Booking identifier to retrieve
+
+    Returns the booking details including room_id if found.
+    """
+    try:
+        collection = await get_bookings_collection()
+
+        # Find the booking by booking_id only
+        booking = await collection.find_one({
+            "booking_id": booking_id
+        })
+
+        if not booking:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": {
+                        "code": "BOOKING_NOT_FOUND",
+                        "message": "Booking ID could not be found in ROMs System"
+                    }
+                }
+            )
+
+        # Return booking response including room_id
+        return BookingResponse(
+            booking_id=booking["booking_id"],
+            room_id=booking["room_id"],
+            user_id=booking["user_id"],
+            date=booking["date"],
+            start_time=booking["start_time"],
+            end_time=booking["end_time"],
+            course_id=booking["course_id"],
+            course_name=booking["course_name"],
+            notes=booking.get("notes")
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": {
+                    "code": "DATABASE_ERROR",
+                    "message": "Unable to retrieve booking information"
                 }
             }
         )
