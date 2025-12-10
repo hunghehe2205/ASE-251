@@ -20,6 +20,15 @@ class AuthResponse(BaseModel):
     message: str
 
 
+class LoginResponse(BaseModel):
+    status: str
+    message: str
+    role: str
+    user_id: str
+    fullname: str
+    email: str
+
+
 class RegisterResponseData(BaseModel):
     user_id: str
     fullname: str
