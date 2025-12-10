@@ -9,6 +9,7 @@ from app.schemas.auth import (
     RegisterRequest,
     LoginRequest,
     AuthResponse,
+    LoginResponse,
     RegisterResponse,
     RegisterResponseData,
     RegisterResponseMeta,
@@ -132,9 +133,9 @@ async def register(request: RegisterRequest):
     return response
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
-    """Login user with email/password and return role."""
+    """Login user with email/password and return user information."""
     users_collection = await get_users_collection()
 
     # Missing input
@@ -196,16 +197,18 @@ async def login(request: LoginRequest):
             },
         )
 
-    # Success: return only role
+    # Success: return user information
     return JSONResponse(
-        status_code=status.HTTP_200_OK, 
+        status_code=status.HTTP_200_OK,
         content={
+            "status": "success",
+            "message": "Login successful",
             "role": user.get("role", ""),
-            "user_id" : user.get("user_id",""),
+            "user_id": user.get("user_id", ""),
             "fullname": user.get("fullname", ""),
             "email": user.get("email", "")
-            }
-        )
+        }
+    )
 
 
 @router.post("/logout", response_model=AuthResponse)
