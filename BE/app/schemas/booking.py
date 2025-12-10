@@ -40,6 +40,7 @@ class BookingUpdateRequest(BaseModel):
 class BookingResponse(BaseModel):
     """Response for successful booking creation."""
     booking_id: str = Field(..., description="Booking ID")
+    room_id: str = Field(..., description="Room ID")
     user_id: str = Field(..., description="User ID of the lecturer")
     date: str
     start_time: str
