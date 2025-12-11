@@ -1,10 +1,11 @@
 """Schedule API endpoints."""
 from typing import Optional, List, Dict
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from datetime import datetime, timedelta
 
 from app.schemas.schedule import RoomSchedule, ScheduleItem, ScheduleErrorResponse
 from app.database.db_client import get_bookings_collection
+from app.utils.rate_limit import enforce_schedule_rate_limit
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
@@ -130,6 +131,7 @@ async def get_schedule(
         description="End date in YYYY-MM-DD format",
         example="2025-12-15"
     ),
+    _: None = Depends(enforce_schedule_rate_limit)
 ):
     """
     Get schedule for rooms.
