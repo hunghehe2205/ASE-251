@@ -195,7 +195,7 @@ class BookingDatabaseOperations:
                 query["room_id"] = room_id
             return await asyncio.wait_for(
                 collection.find_one(query),
-                timeout=3.0
+                timeout=10.0
             )
 
         return await retry_db_operation(find_operation)
@@ -591,9 +591,11 @@ async def update_booking(
         # Step 3: Validate booking ownership
         BookingValidator.validate_booking_ownership(existing_booking, user_id)
 
-        # Step 4: Merge update data with existing booking
+        # Step 4: Merge update data with existing booking (user_id cannot be changed)
         updated_data = {
-            "user_id": booking_data.user_id if booking_data.user_id is not None else existing_booking["user_id"],
+            "booking_id": existing_booking["booking_id"],  # Keep booking_id for response
+            "room_id": existing_booking["room_id"],  # Keep room_id for response
+            "user_id": existing_booking["user_id"],  # Keep original owner, prevent transfer
             "date": booking_data.date if booking_data.date is not None else existing_booking["date"],
             "start_time": booking_data.start_time if booking_data.start_time is not None else existing_booking["start_time"],
             "end_time": booking_data.end_time if booking_data.end_time is not None else existing_booking["end_time"],
@@ -635,13 +637,16 @@ async def update_booking(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        # Handle unexpected errors - could be room service timeout
+        # Handle unexpected errors - log for debugging
+        print(f"UPDATE BOOKING ERROR: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "error": {
-                    "code": "ROOM_SERVICE_TIMEOUT",
-                    "message": "Room system did not respond"
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": f"An unexpected error occurred: {str(e)}"
                 }
             }
         )
@@ -796,13 +801,16 @@ async def delete_booking(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        # Handle unexpected errors - could be room service timeout
+        # Handle unexpected errors - log for debugging
+        print(f"DELETE BOOKING ERROR: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "error": {
-                    "code": "ROOM_SERVICE_TIMEOUT",
-                    "message": "Room system did not respond"
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": f"An unexpected error occurred: {str(e)}"
                 }
             }
         )
