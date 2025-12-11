@@ -1,9 +1,10 @@
 """Schedule API endpoints."""
-from typing import Optional, List
+from typing import Optional, List, Dict
 from fastapi import APIRouter, HTTPException, status, Query
 from datetime import datetime, timedelta
 
 from app.schemas.schedule import RoomSchedule, ScheduleItem, ScheduleErrorResponse
+from app.database.db_client import get_bookings_collection
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
@@ -14,7 +15,7 @@ async def fetch_schedule_from_roms(
     to_date: str
 ) -> List[RoomSchedule]:
     """
-    Fetch schedule data from ROMS service.
+    Fetch schedule data from bookings collection.
     
     Args:
         room: Room ID or None for all rooms
@@ -23,48 +24,64 @@ async def fetch_schedule_from_roms(
     
     Returns:
         List of RoomSchedule objects
-    
-    Raises:
-        ValueError: If room not found
-        Exception: For ROMS service errors
     """
-    # TODO: Replace with actual ROMS API call
-    # For now, return mock data
-    
-    mock_rooms = ["401", "402", "C6-504", "C6-505"]
-    
-    # If specific room requested, validate it exists
-    if room and room not in mock_rooms:
-        raise ValueError(f"Room {room} not found")
-    
-    # Determine which rooms to return
-    rooms_to_return = [room] if room else mock_rooms
-    
-    result = []
-    for room_id in rooms_to_return:
-        result.append(
-            RoomSchedule(
-                room=room_id,
-                **{
-                    "from": from_date,
-                    "to": to_date
-                },
-                booking=[
-                    ScheduleItem(
-                        booking_id=f"{room_id}-bk-1",
-                        room_id=room_id,
-                        user_id="U2025120010",
-                        date=from_date,
-                        start_time="09:00",
-                        end_time="11:00",
-                        course_id="CO-2017",
-                        course_name="Data Structures",
-                        notes="Mock data from ROMS"
-                    )
-                ]
+    collection = await get_bookings_collection()
+
+    query = {
+        "date": {
+            "$gte": from_date,
+            "$lte": to_date
+        }
+    }
+
+    if room:
+        query["room_id"] = room
+
+    cursor = (
+        collection.find(query)
+        .sort([
+            ("room_id", 1),
+            ("date", 1),
+            ("start_time", 1)
+        ])
+    )
+    booking_docs = [doc async for doc in cursor]
+
+    rooms_data: Dict[str, List[ScheduleItem]] = {}
+    for booking_doc in booking_docs:
+        room_id = booking_doc.get("room_id")
+        if not room_id:
+            continue
+
+        rooms_data.setdefault(room_id, []).append(
+            ScheduleItem(
+                booking_id=booking_doc["booking_id"],
+                room_id=room_id,
+                user_id=booking_doc["user_id"],
+                date=booking_doc["date"],
+                start_time=booking_doc["start_time"],
+                end_time=booking_doc["end_time"],
+                course_id=booking_doc["course_id"],
+                course_name=booking_doc["course_name"],
+                notes=booking_doc.get("notes")
             )
         )
-    
+
+    if room and room not in rooms_data:
+        rooms_data[room] = []
+
+    result = [
+        RoomSchedule(
+            room=room_id,
+            **{
+                "from": from_date,
+                "to": to_date
+            },
+            booking=bookings
+        )
+        for room_id, bookings in sorted(rooms_data.items())
+    ]
+
     return result
 
 
