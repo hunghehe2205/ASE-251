@@ -49,13 +49,17 @@ async def fetch_schedule_from_roms(
                     "from": from_date,
                     "to": to_date
                 },
-                schedule=[
+                booking=[
                     ScheduleItem(
+                        booking_id=f"{room_id}-bk-1",
+                        room_id=room_id,
+                        user_id="U2025120010",
                         date=from_date,
                         start_time="09:00",
                         end_time="11:00",
+                        course_id="CO-2017",
                         course_name="Data Structures",
-                        lecturer="Nguyen A"
+                        notes="Mock data from ROMS"
                     )
                 ]
             )
