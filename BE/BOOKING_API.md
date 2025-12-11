@@ -73,6 +73,69 @@ When a non-lecturer tries to create a booking:
 }
 ```
 
+### ❌ Invalid Booking Data (400)
+When booking validation fails:
+
+**Invalid time range (start_time >= end_time):**
+```json
+{
+  "error": {
+    "code": "INVALID_TIME_RANGE",
+    "message": "Start time must be before end time"
+  }
+}
+```
+
+**Booking in the past:**
+```json
+{
+  "error": {
+    "code": "BOOKING_IN_PAST",
+    "message": "Cannot create booking for past dates"
+  }
+}
+```
+
+**Booking too far in future (>30 days):**
+```json
+{
+  "error": {
+    "code": "BOOKING_TOO_FAR_FUTURE",
+    "message": "Cannot create booking more than 30 days in advance"
+  }
+}
+```
+
+**Invalid date format:**
+```json
+{
+  "error": {
+    "code": "INVALID_DATE_FORMAT",
+    "message": "Date must be in YYYY-MM-DD format"
+  }
+}
+```
+
+**Invalid time format:**
+```json
+{
+  "error": {
+    "code": "INVALID_START_TIME_FORMAT",
+    "message": "Start time must be in HH:MM format (24-hour)"
+  }
+}
+```
+
+**Invalid date/time value:**
+```json
+{
+  "error": {
+    "code": "INVALID_DATE_TIME_VALUE",
+    "message": "Invalid date or time value: [specific error]"
+  }
+}
+```
+
 ### ❌ Time Conflict (409)
 When the room is already booked for the requested time:
 ```json
@@ -80,6 +143,26 @@ When the room is already booked for the requested time:
   "error": {
     "code": "ROOM_ALREADY_BOOKED",
     "message": "Room is not available from 13:00 to 15:00"
+  }
+}
+```
+
+### ❌ Request Timeout (408)
+When database operations time out:
+```json
+{
+  "error": {
+    "code": "AVAILABILITY_CHECK_TIMEOUT",
+    "message": "Room availability check timed out after 5 seconds"
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "code": "DATABASE_OPERATION_FAILED",
+    "message": "Database operation failed after 3 retries: [error details]"
   }
 }
 ```
@@ -95,11 +178,59 @@ When there's a problem checking room availability:
 }
 ```
 
+## Business Rules
+
+The booking system enforces the following business logic validation:
+
+1. **Enhanced Format Validation**: 
+   - Regex validation for `YYYY-MM-DD` dates and `HH:MM` times (24-hour format)
+   - Datetime parsing validation for accurate value checking
+2. **Time Range Validation**: `start_time` must be before `end_time` (accurate datetime comparison)
+3. **Past Date Prevention**: Cannot create bookings for past dates
+4. **Future Limit**: Cannot create bookings more than 30 days in advance
+
+## Performance & Reliability Features
+
+1. **Query Timeouts**:
+   - Room availability checks: 5 second timeout
+   - CRUD operations: 3 second timeout
+2. **Retry Logic**: 
+   - Failed database operations retry up to 3 times
+   - Exponential backoff (0.1s, 0.2s, 0.4s delays)
+3. **Accurate Time Parsing**: 
+   - String times converted to datetime objects for precise comparison
+   - Prevents edge cases in time validation
+
+These validations and performance features apply to both CREATE and UPDATE operations.
+
 ## Implementation Details
+
+### System Architecture
+
+The booking system uses a **systematic, function-based approach** with centralized components:
+
+#### **Helper Classes:**
+1. **`BookingDatabaseOperations`** - Centralized database operations with timeout and retry
+2. **`BookingValidator`** - Centralized validation logic (format, business rules, authorization)
+3. **`BookingResponseBuilder`** - Standardized response building
+
+#### **Core Functions:**
+1. **`validate_date_time_format()`** - Regex + datetime parsing validation
+2. **`validate_booking_business_logic()`** - Business rule validation
+3. **`retry_db_operation()`** - Retry logic with exponential backoff
+4. **`check_room_availability()`** - Room conflict detection with timeout
+
+#### **Systematic Endpoint Flow:**
+Each endpoint follows a consistent pattern:
+1. **Authorization Validation** → `BookingValidator.validate_user_authorization()`
+2. **Data Validation** → `BookingValidator.validate_and_parse_booking_data()`
+3. **Business Logic** → `BookingValidator.validate_room_availability()`
+4. **Database Operations** → `BookingDatabaseOperations.*` methods
+5. **Response Building** → `BookingResponseBuilder.build_booking_response()`
 
 ### Files Created
 1. **`app/schemas/booking.py`** - Pydantic models for request/response
-2. **`app/routers/booking.py`** - Booking endpoint implementation
+2. **`app/routers/booking.py`** - Systematic booking endpoint implementation
 3. **`app/database/db_client.py`** - Added `get_bookings_collection()` function
 
 ### Time Conflict Detection
