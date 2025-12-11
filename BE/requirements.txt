@@ -7,4 +7,5 @@ python-dotenv
 pymongo[srv]
 passlib[bcrypt]
 bcrypt==3.2.0
+pytest
 
